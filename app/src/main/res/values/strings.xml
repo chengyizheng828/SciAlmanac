@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">科研黄历</string>
+    <string name="nav_today">今日黄历</string>
+    <string name="nav_calendar">运势日历</string>
+    <string name="nav_diary">挫折日记</string>
+    <string name="nav_settings">设置</string>
+</resources>
