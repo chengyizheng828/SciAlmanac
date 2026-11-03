@@ -75,11 +75,20 @@ class SettingsRepository(context: Context) {
             prefs.edit().putString(KEY_DIARY_TAGS, writeStringList(cleaned + "其他")).apply()
         }
 
-    /** 宜忌候选库：用户自定义的具体实验操作条目。AI 生成每日宜忌时优先从中挑选；空库则自行生成。 */
+    /** 宜忌候选库：用户自定义的具体操作名（不带宜/忌前缀）。AI 生成每日宜忌时从中挑选、按值星决定宜忌；空库则自行生成。 */
     var yiJiPool: List<String>
         get() = parseStringList(prefs.getString(KEY_YIJI_POOL, null)) ?: emptyList()
         set(value) = prefs.edit()
-            .putString(KEY_YIJI_POOL, writeStringList(value.map { it.trim() }.filter { it.isNotEmpty() }.distinct()))
+            .putString(
+                KEY_YIJI_POOL,
+                writeStringList(
+                    value.map { it.trim() }
+                        // 用户习惯性写了「宜/忌」前缀就顺手剥掉，库里只存纯操作名
+                        .map { it.removePrefix("宜").removePrefix("忌").trim() }
+                        .filter { it.isNotEmpty() }
+                        .distinct()
+                ),
+            )
             .apply()
 
     /** 用户自定义热梗库，注入 AI 提示词让批注更有人味。 */

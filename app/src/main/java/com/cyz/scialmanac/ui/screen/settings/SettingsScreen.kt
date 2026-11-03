@@ -593,8 +593,9 @@ private fun LazyListScope.yiJiPoolItems(
     item {
         if (showHints) {
             HintText(
-                "在这里维护你自己的「宜忌字条库」：填入具体的实验操作条目（如：宜旋蒸、宜过硅胶柱、忌动手套箱），" +
-                    "AI 生成每日宜忌时会优先从库里挑选、按当天值星微调措辞。库为空时 AI 完全自行生成。长按右侧拖动柄可排序。"
+                "在这里维护你自己的「宜忌字条库」：只填具体操作名，不要带宜/忌前缀（如：旋蒸、硅胶柱、TLC点板、手套箱、蒸镀）。" +
+                    "AI 生成每日宜忌时会从库里挑操作，再根据当天值星决定它今天进「宜」栏还是「忌」栏；" +
+                    "不小心写了「宜/忌」前缀会自动帮你去掉。库为空时 AI 完全自行生成。长按右侧拖动柄可排序。"
             )
         }
     }
@@ -604,7 +605,7 @@ private fun LazyListScope.yiJiPoolItems(
             onItemsChange = onChange,
             onDraggingChange = onDraggingChange,
             addTitle = "添加候选条目",
-            addHint = "例如：宜旋蒸 / 忌动手套箱",
+            addHint = "例如：旋蒸 / 硅胶柱 / TLC点板",
             defaults = emptyList(),
         )
     }
