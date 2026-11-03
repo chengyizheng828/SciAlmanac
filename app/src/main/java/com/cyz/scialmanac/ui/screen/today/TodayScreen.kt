@@ -314,7 +314,7 @@ private fun FortuneCard(
     val level = LuckLevel.from(fortune?.luckLevel)
     val themeColor = fortune?.themeColor?.let { runCatching { Color(android.graphics.Color.parseColor(it)) }.getOrNull() }
         ?: level.color
-    val isBad = level == LuckLevel.XIONG || level == LuckLevel.ZHISHI_BUYI
+    val isBad = level == LuckLevel.ZHONG_XIONG || level == LuckLevel.DA_XIONG
 
     Card(
         modifier = Modifier.fillMaxWidth(),

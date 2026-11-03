@@ -406,15 +406,17 @@ private fun YearDropdown(
 
 @Composable
 private fun LegendRow() {
-    val items = listOf(
-        LuckLevel.DA_JI, LuckLevel.ZHONG_JI, LuckLevel.PING, LuckLevel.XIONG
-    )
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        for (lv in items) {
-            Box(Modifier.size(8.dp).background(lv.color, CircleShape))
-            Spacer(Modifier.padding(2.dp))
-            Text(lv.label, fontSize = 11.sp, color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
-            Spacer(Modifier.padding(6.dp))
+    val items = LuckLevel.entries
+    Column {
+        for (row in items.chunked(4)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                for (lv in row) {
+                    Box(Modifier.size(8.dp).background(lv.color, CircleShape))
+                    Spacer(Modifier.padding(2.dp))
+                    Text(lv.label, fontSize = 11.sp, color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
+                    Spacer(Modifier.padding(6.dp))
+                }
+            }
         }
     }
 }
