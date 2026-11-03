@@ -111,6 +111,7 @@ private enum class SubPage(val title: String) {
     AskOptions("问卦快捷选项"),
     Memes("热梗库"),
     DiaryTags("日记标签"),
+    YiJiPool("宜忌候选库"),
     Profile("科研画像"),
     Appearance("外观"),
     Data("本地数据"),
@@ -137,6 +138,7 @@ fun SettingsScreen(appState: AppState, bottomInnerPadding: Dp) {
     var askOptions by remember { mutableStateOf(appState.settings.askOptions) }
     var diaryTags by remember { mutableStateOf(appState.settings.diaryTags) }
     var memes by remember { mutableStateOf(appState.settings.memes) }
+    var yiJiPool by remember { mutableStateOf(appState.settings.yiJiPool) }
 
     // 列表编辑器拖动排序期间禁用外层列表滚动，避免手势冲突
     var listDragging by remember { mutableStateOf(false) }
@@ -237,7 +239,7 @@ fun SettingsScreen(appState: AppState, bottomInnerPadding: Dp) {
             SettingsList(innerPadding, backdrop, scrollBehavior, scrollEnabled = !listDragging) {
                 when (p) {
                     SubPage.Root -> rootItems(
-                        appState, askOptions, diaryTags, memes, bottomInnerPadding,
+                        appState, askOptions, diaryTags, memes, yiJiPool, bottomInnerPadding,
                         onNavigate = { page = it },
                     )
                     SubPage.Ai -> aiItems(
@@ -277,6 +279,17 @@ fun SettingsScreen(appState: AppState, bottomInnerPadding: Dp) {
                         onChange = {
                             memes = it
                             appState.settings.memes = it
+                        },
+                        onDraggingChange = { listDragging = it },
+                        appState.floatingBar,
+                        bottomInnerPadding,
+                    )
+                    SubPage.YiJiPool -> yiJiPoolItems(
+                        appState.showHints,
+                        yiJiPool,
+                        onChange = {
+                            yiJiPool = it
+                            appState.settings.yiJiPool = it
                         },
                         onDraggingChange = { listDragging = it },
                         appState.floatingBar,
@@ -426,6 +439,7 @@ private fun LazyListScope.rootItems(
     askOptions: List<String>,
     diaryTags: List<String>,
     memes: List<Meme>,
+    yiJiPool: List<String>,
     bottomInnerPadding: Dp,
     onNavigate: (SubPage) -> Unit,
 ) {
@@ -434,6 +448,12 @@ private fun LazyListScope.rootItems(
     item { EntryCard("问卦快捷选项", askOptions.size.toString() + " 个选项") { onNavigate(SubPage.AskOptions) } }
     item { EntryCard("热梗库", memes.size.toString() + " 个热梗 · 注入 AI 批注") { onNavigate(SubPage.Memes) } }
     item { EntryCard("日记标签", diaryTags.size.toString() + " 个标签") { onNavigate(SubPage.DiaryTags) } }
+    item {
+        EntryCard(
+            "宜忌候选库",
+            if (yiJiPool.isEmpty()) "未设置 · AI 自行生成" else yiJiPool.size.toString() + " 条候选 · AI 优先挑选",
+        ) { onNavigate(SubPage.YiJiPool) }
+    }
     item {
         val joined = appState.profileKeywords.joinToString("、")
         EntryCard("科研画像", if (joined.length > 24) joined.take(24) + "…" else joined) { onNavigate(SubPage.Profile) }
@@ -556,6 +576,36 @@ private fun LazyListScope.diaryTagsItems(
             addTitle = "添加标签",
             addHint = "例如：测试机时翻车",
             defaults = SettingsRepository.DIARY_TAGS,
+        )
+    }
+    bottomSpacer(floatingBar, bottomInnerPadding)
+}
+
+private fun LazyListScope.yiJiPoolItems(
+    showHints: Boolean,
+    yiJiPool: List<String>,
+    onChange: (List<String>) -> Unit,
+    onDraggingChange: (Boolean) -> Unit,
+    floatingBar: Boolean,
+    bottomInnerPadding: Dp,
+) {
+    item { Spacer(Modifier.height(12.dp)) }
+    item {
+        if (showHints) {
+            HintText(
+                "在这里维护你自己的「宜忌字条库」：填入具体的实验操作条目（如：宜旋蒸、宜过硅胶柱、忌动手套箱），" +
+                    "AI 生成每日宜忌时会优先从库里挑选、按当天值星微调措辞。库为空时 AI 完全自行生成。长按右侧拖动柄可排序。"
+            )
+        }
+    }
+    item {
+        StringListEditor(
+            items = yiJiPool,
+            onItemsChange = onChange,
+            onDraggingChange = onDraggingChange,
+            addTitle = "添加候选条目",
+            addHint = "例如：宜旋蒸 / 忌动手套箱",
+            defaults = emptyList(),
         )
     }
     bottomSpacer(floatingBar, bottomInnerPadding)

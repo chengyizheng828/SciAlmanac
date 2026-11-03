@@ -75,6 +75,13 @@ class SettingsRepository(context: Context) {
             prefs.edit().putString(KEY_DIARY_TAGS, writeStringList(cleaned + "其他")).apply()
         }
 
+    /** 宜忌候选库：用户自定义的具体实验操作条目。AI 生成每日宜忌时优先从中挑选；空库则自行生成。 */
+    var yiJiPool: List<String>
+        get() = parseStringList(prefs.getString(KEY_YIJI_POOL, null)) ?: emptyList()
+        set(value) = prefs.edit()
+            .putString(KEY_YIJI_POOL, writeStringList(value.map { it.trim() }.filter { it.isNotEmpty() }.distinct()))
+            .apply()
+
     /** 用户自定义热梗库，注入 AI 提示词让批注更有人味。 */
     var memes: List<Meme>
         get() = prefs.getString(KEY_MEMES, null)?.let { raw ->
@@ -116,6 +123,7 @@ class SettingsRepository(context: Context) {
         private const val KEY_ASK_PREFIX = "ask_cache|"
         private const val KEY_ASK_OPTIONS = "ask_options"
         private const val KEY_DIARY_TAGS = "diary_tags"
+        private const val KEY_YIJI_POOL = "yiji_pool"
         private const val KEY_MEMES = "memes"
 
         const val DEFAULT_KEYWORDS =

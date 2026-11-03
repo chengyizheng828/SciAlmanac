@@ -71,7 +71,7 @@ class FortuneEngine(
         val diaries = recentDiaries(12)
         val messages = listOf(
             "system" to SYSTEM_PROMPT,
-            "user" to fortuneUserPrompt(today(), settings.profileKeywords, diaries, settings.memes),
+            "user" to fortuneUserPrompt(today(), settings.profileKeywords, diaries, settings.memes, settings.yiJiPool),
         )
         val entity = try {
             if (!client.isConfigured) throw AiException("AI 接口未配置")
@@ -182,6 +182,7 @@ class FortuneEngine(
             "再结合当日缘分开诚布公地判级。即使一条记录也没有，也要敢于给出「小凶、中凶、大凶」，负级合计占比不得低于三成；「大吉」是稀缺品，不能随手就给。" +
             "theme_color 为与等级匹配的十六进制颜色码。" +
             "宜忌必须是可以执行的具体操作（如：宜旋蒸、宜过硅胶柱、宜TLC点板、宜开反应、宜蒸镀、宜封装、宜测J-V、宜洗基片），从值星传统宜忌映射到实验室场景；" +
+            "用户消息中的「宜忌候选库」非空时必须优先从中挑选条目（可微调措辞贴合值星），候选库为空才自行生成；" +
             "严禁输出「宜细心」「忌大意」「宜保持耐心」这类没法执行的空话；要贴合有机光电材料实验室日常，也可以玩有机合成的梗。" +
             "内容务必精简：yi 给 2~3 项、ji 给 2 项，每项不超过 12 个字；" +
             "ai_comment 控制在 50~80 字，一针见血，不要废话。" +
@@ -201,7 +202,7 @@ class FortuneEngine(
             "用户想对今天已有的卦象再算一签。这是「问天二次」，不是改命：必须基于用户给出的原卦象推演一签类似的卦，绝不允许改运势。" +
             "只返回纯 JSON（不要 markdown 代码块），格式：{\"luck_level\":\"…\",\"theme_color\":\"#…\",\"yi\":[\"…\"],\"ji\":[\"…\"],\"ai_comment\":\"…\"}。" +
             "硬性规则：luck_level 必须与原卦象完全一致；theme_color 必须与原卦象完全一致；" +
-            "yi、ji 保持与原卦象相同的主题和条数，只换措辞、可微调顺序，每项不超过 12 个字；" +
+            "yi、ji 保持与原卦象相同的主题和条数，只换措辞、可微调顺序，每项不超过 12 个字，换说法时优先沿用宜忌候选库里的措辞；" +
             "ai_comment 用全新的说法重新写同一句断语（50~80 字，一针见血，不与原批注雷同），" +
             "并在末尾用一句话提醒：强行再问一卦会遭实验反噬（如柱子必堵、器件必短路、水氧必飙），语气玩味、点到为止，不要恐吓。" +
             "玩梗纪律同前：热梗库里挑 0~1 个自然契合的梗，禁止为了搞笑而搞笑；emoji 最多一个。"
@@ -211,12 +212,14 @@ class FortuneEngine(
             keywords: List<String>,
             diaries: List<DiaryEntity>,
             memes: List<Meme> = emptyList(),
+            yiJiPool: List<String> = emptyList(),
         ): String {
             val sb = StringBuilder()
             sb.append("日期：").append(date).append('\n')
             runCatching { sb.append(Almanac.dailyBlock(LocalDate.parse(date))).append('\n') }
             sb.append("科研画像：").append(keywords.joinToString("、")).append('\n')
             sb.append(memeSection(memes))
+            sb.append(yiJiSection(yiJiPool))
             sb.append("最近挫折记录：").append('\n')
             if (diaries.isEmpty()) {
                 sb.append("（暂无记录，可以适当毒舌地调侃用户还没记录过翻车）").append('\n')
@@ -227,6 +230,16 @@ class FortuneEngine(
             }
             sb.append("请生成这一天的科研运势 JSON。")
             return sb.toString()
+        }
+
+        /** 把宜忌候选库拼进用户提示词；空库时让模型自行生成。 */
+        fun yiJiSection(pool: List<String>): String {
+            if (pool.isEmpty()) {
+                return "宜忌候选库：（空，请自行生成贴合值星的具体操作宜忌）\n"
+            }
+            return "宜忌候选库（生成宜忌时必须优先从下列条目挑选，可微调措辞贴合当日值星；\n" +
+                "只有确实不够用时才补充自创，严禁输出库之外的空话）：\n" +
+                pool.joinToString("、") + "\n"
         }
 
         /** 把热梗库拼进用户提示词；空库时明确告诉模型别硬玩梗。 */
