@@ -106,8 +106,25 @@ fun TodayScreen(appState: AppState, bottomInnerPadding: Dp) {
     var showAskSheet by remember { mutableStateOf(false) }
     var showRegenConfirm by remember { mutableStateOf(false) }
 
+    // 每日首次进入：加载今日卦象，还没有就自动开算
+    fun startGenerate() {
+        scope.launch {
+            generating = true
+            thinkingChars = 0
+            locked = false
+            val r = engine.generateToday { thinkingChars = it.length }
+            fortune = r.fortune
+            locked = r.locked
+            resultKey++
+            appState.fortuneVersion++
+            generating = false
+        }
+    }
+
     LaunchedEffect(Unit) {
-        fortune = engine.todayFortune()
+        val f = engine.todayFortune()
+        fortune = f
+        if (f == null) startGenerate()
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -154,17 +171,7 @@ fun TodayScreen(appState: AppState, bottomInnerPadding: Dp) {
                             onRegenerate = {
                                 if (fortune == null) {
                                     // 今日还没有卦象：直接推算
-                                    scope.launch {
-                                        generating = true
-                                        thinkingChars = 0
-                                        locked = false
-                                        val r = engine.generateToday { thinkingChars = it.length }
-                                        fortune = r.fortune
-                                        locked = r.locked
-                                        resultKey++
-                                        appState.fortuneVersion++
-                                        generating = false
-                                    }
+                                    startGenerate()
                                 } else {
                                     // 今日卦象已定：重算是「对着原卦再算一签类似的」，先警告反噬
                                     showRegenConfirm = true
@@ -337,7 +344,11 @@ private fun FortuneCard(
                     )
                     Spacer(Modifier.weight(1f))
                     TextButton(
-                        text = if (generating) "推算中…" else "重新算卦",
+                        text = when {
+                        generating -> "推算中…"
+                        fortune == null -> "今日算卦"
+                        else -> "重新算卦"
+                    },
                         onClick = onRegenerate,
                         colors = ButtonDefaults.textButtonColorsPrimary(),
                         enabled = !generating
