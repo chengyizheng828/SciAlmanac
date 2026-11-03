@@ -6,6 +6,7 @@ import com.cyz.scialmanac.data.FortuneEntity
 import com.cyz.scialmanac.data.Meme
 import com.cyz.scialmanac.data.SettingsRepository
 import com.cyz.scialmanac.model.LuckLevel
+import java.time.LocalDate
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonPrimitive
@@ -172,6 +173,7 @@ class FortuneEngine(
 
         const val SYSTEM_PROMPT = "你是一位精通实验玄学的科研黄历大师，说话像实验室里懂行的师兄：专业、幽默、毒舌但有分寸。" +
             USER_IDENTITY +
+            "用户消息开头会附【今日真实黄历】（干支、建除十二神值星及其传统宜忌、彭祖百忌），这是推算的根本根据：卦象吉凶必须参考值星的黄道/黑道，宜忌要从值星的传统宜忌映射而来。" +
             "结合用户的科研画像、最近的实验挫折记录和热梗库，为指定日期生成科研运势。" +
             "必须只返回纯 JSON（不要 markdown 代码块），格式：{\"luck_level\":\"大吉\",\"theme_color\":\"#10B981\",\"yi\":[\"...\",\"...\"],\"ji\":[\"...\",\"...\"],\"ai_comment\":\"点评\"}。" +
             "luck_level 只能是：大吉、中吉、小吉、平、小凶、中凶、大凶。从大吉到大凶共七级，要敢用满整个量程。" +
@@ -179,13 +181,14 @@ class FortuneEngine(
             "要分析日记里翻车的共性（同类事故反复出现=该方向今日凶相；问题已化解、近期顺利=可以放心给吉），" +
             "再结合当日缘分开诚布公地判级。即使一条记录也没有，也要敢于给出「小凶、中凶、大凶」，负级合计占比不得低于三成；「大吉」是稀缺品，不能随手就给。" +
             "theme_color 为与等级匹配的十六进制颜色码。" +
-            "宜忌要贴合有机光电材料实验室日常（旋涂、蒸镀、测器件、手套箱、测光谱、封装等），也可以玩有机合成的梗。" +
+            "宜忌必须是可以执行的具体操作（如：宜旋蒸、宜过硅胶柱、宜TLC点板、宜开反应、宜蒸镀、宜封装、宜测J-V、宜洗基片），从值星传统宜忌映射到实验室场景；" +
+            "严禁输出「宜细心」「忌大意」「宜保持耐心」这类没法执行的空话；要贴合有机光电材料实验室日常，也可以玩有机合成的梗。" +
             "内容务必精简：yi 给 2~3 项、ji 给 2 项，每项不超过 12 个字；" +
             "ai_comment 控制在 50~80 字，一针见血，不要废话。" +
             "玩梗纪律：从热梗库里挑 0~1 个与当天情境自然契合的梗，点到为止；" +
             "绝对禁止为了搞笑而搞笑、禁止棒读、禁止堆砌梗；热梗库为空就老老实实说话。emoji 最多一个，克制使用。"
 
-        const val ASK_SYSTEM_PROMPT = "你是一位科研黄历大师，根据今日运势、用户科研画像、近期挫折记录和热梗库，" +
+        const val ASK_SYSTEM_PROMPT = "你是一位科研黄历大师，用户消息中附有【今日真实黄历】（干支、建除十二神值星、彭祖百忌），结合真实黄历、今日运势、用户科研画像、近期挫折记录和热梗库，" +
             USER_IDENTITY +
             "回答用户今天是否适合进行某项实验操作。要求：先给明确结论（适合/不适合/谨慎），再给 2~3 条简短理由。" +
             "理由必须有趣具体：结合今日运势、近期翻车记录和实验室日常打比方，禁止复读用户的问题本身当结论。" +
@@ -211,6 +214,7 @@ class FortuneEngine(
         ): String {
             val sb = StringBuilder()
             sb.append("日期：").append(date).append('\n')
+            runCatching { sb.append(Almanac.dailyBlock(LocalDate.parse(date))).append('\n') }
             sb.append("科研画像：").append(keywords.joinToString("、")).append('\n')
             sb.append(memeSection(memes))
             sb.append("最近挫折记录：").append('\n')
@@ -289,6 +293,7 @@ class FortuneEngine(
         ): String {
             val sb = StringBuilder()
             sb.append("日期：").append(date).append('\n')
+            runCatching { sb.append(Almanac.dailyBlock(LocalDate.parse(date))).append('\n') }
             sb.append("科研画像：").append(keywords.joinToString("、")).append('\n')
             sb.append(memeSection(memes))
             sb.append("今日运势：").append(todayLuck ?: "未知").append("；今日批注：")

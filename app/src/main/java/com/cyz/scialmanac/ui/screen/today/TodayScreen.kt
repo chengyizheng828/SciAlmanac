@@ -67,7 +67,6 @@ import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.LinearProgressIndicator
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
@@ -165,7 +164,6 @@ fun TodayScreen(appState: AppState, bottomInnerPadding: Dp) {
                             dateText = dateText,
                             weekText = weekText,
                             generating = generating,
-                            thinkingChars = thinkingChars,
                             resultKey = resultKey,
                             locked = locked,
                             onRegenerate = {
@@ -243,9 +241,9 @@ fun TodayScreen(appState: AppState, bottomInnerPadding: Dp) {
     }
 }
 
-/** AI 推算中的实时摘要动画：轮换签语 + 进度条 + 流式字数计数。 */
+/** AI 推算中的实时摘要动画：轮换签语。 */
 @Composable
-private fun ThinkingBlock(thinkingChars: Int) {
+private fun ThinkingBlock() {
     val tips = remember {
         listOf(
             "正在翻阅你的翻车日记…",
@@ -268,16 +266,6 @@ private fun ThinkingBlock(thinkingChars: Int) {
             fontSize = 13.sp,
             color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
         )
-        Spacer(Modifier.height(6.dp))
-        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-        if (thinkingChars > 0) {
-            Spacer(Modifier.height(6.dp))
-            Text(
-                text = "AI 正在推算 · 已接收 " + thinkingChars + " 字",
-                fontSize = 11.sp,
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.7f),
-            )
-        }
     }
 }
 
@@ -306,7 +294,6 @@ private fun FortuneCard(
     dateText: String,
     weekText: String,
     generating: Boolean,
-    thinkingChars: Int,
     resultKey: Int,
     locked: Boolean,
     onRegenerate: () -> Unit,
@@ -381,7 +368,7 @@ private fun FortuneCard(
 
                 Spacer(Modifier.height(12.dp))
                 when {
-                    generating -> ThinkingBlock(thinkingChars)
+                    generating -> ThinkingBlock()
                     fortune == null -> Text(
                         text = "今日运势尚未推算，点击右上角「重新算卦」看看今天适不适合进实验室。",
                         fontSize = 13.sp,
@@ -608,7 +595,7 @@ private fun AskBottomSheet(
 
             if (asking) {
                 Spacer(Modifier.height(12.dp))
-                ThinkingBlock(0)
+                ThinkingBlock()
             }
             if (fromCache && !asking) {
                 Spacer(Modifier.height(10.dp))
