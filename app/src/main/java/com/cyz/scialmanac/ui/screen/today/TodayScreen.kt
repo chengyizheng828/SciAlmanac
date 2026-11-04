@@ -299,8 +299,8 @@ private fun FortuneCard(
     onRegenerate: () -> Unit,
 ) {
     val level = LuckLevel.from(fortune?.luckLevel)
-    val themeColor = fortune?.themeColor?.let { runCatching { Color(android.graphics.Color.parseColor(it)) }.getOrNull() }
-        ?: level.color
+    // 颜色只按等级取标准色，不用 AI 返回的主题色，保证同一天同一级别人人一致
+    val themeColor = level.color
     val isBad = level == LuckLevel.ZHONG_XIONG || level == LuckLevel.DA_XIONG
 
     Card(

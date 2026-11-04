@@ -4,8 +4,8 @@ import androidx.compose.ui.graphics.Color
 
 enum class LuckLevel(val label: String, val hex: Long) {
     DA_JI("大吉", 0xFF10B981),
-    ZHONG_JI("中吉", 0xFF3B82F6),
-    XIAO_JI("小吉", 0xFF06B6D4),
+    ZHONG_JI("中吉", 0xFF22C55E),
+    XIAO_JI("小吉", 0xFF2DD4BF),
     PING("平", 0xFFF59E0B),
     XIAO_XIONG("小凶", 0xFFF97316),
     ZHONG_XIONG("中凶", 0xFFEF4444),

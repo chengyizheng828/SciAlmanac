@@ -180,6 +180,7 @@ class FortuneEngine(
             "判级铁律：不准逢迎、不准默认报喜，黄历不敢判凶就是骗子。挫折记录是发现规律的线索，不是按数量定罪：" +
             "要分析日记里翻车的共性（同类事故反复出现=该方向今日凶相；问题已化解、近期顺利=可以放心给吉），" +
             "再结合当日缘分开诚布公地判级。即使一条记录也没有，也要敢于给出「小凶、中凶、大凶」，负级合计占比不得低于三成；「大吉」是稀缺品，不能随手就给。" +
+            "禁止偷懒连着多日给同一判级：若最近几天已经连续同一级别，除非当日值星与干支明确支持，否则必须给出有区分度的不同判级。" +
             "theme_color 为与等级匹配的十六进制颜色码。" +
             "宜忌必须是可以执行的具体操作（如：宜旋蒸、宜过硅胶柱、宜TLC点板、宜开反应、宜蒸镀、宜封装、宜测J-V、宜洗基片），从值星传统宜忌映射到实验室场景；" +
             "「宜忌候选库」中是用户提供的具体操作名（不带宜/忌前缀）：非空时必须优先从中挑选，并按当日值星判定每项今日宜做还是忌做、输出时加上宜/忌前缀；候选库为空才自行生成；" +
@@ -324,7 +325,8 @@ class FortuneEngine(
             val cleaned = extractJson(raw)
             val root = json.parseToJsonElement(cleaned).jsonObject
             val level = root["luck_level"]?.jsonPrimitive?.content ?: "平"
-            val theme = root["theme_color"]?.jsonPrimitive?.content ?: "#F59E0B"
+            // 主题色统一按等级标准色存，AI 返回的 theme_color 不参与展示
+            val theme = "#%06X".format(LuckLevel.from(level).hex and 0xFFFFFF)
             val yi = root["yi"]?.jsonArray?.map { it.jsonPrimitive.content } ?: emptyList()
             val ji = root["ji"]?.jsonArray?.map { it.jsonPrimitive.content } ?: emptyList()
             val comment = root["ai_comment"]?.jsonPrimitive?.content ?: ""
